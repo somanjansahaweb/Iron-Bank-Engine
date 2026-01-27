@@ -1,90 +1,35 @@
-🏦 Banking Program (Python)
+🏦 The Iron Bank (CLI Banking System)
 
-🔹 Overview
+### A Secure, Persistent Banking Simulation Backend built with Python.
 
-The Banking Program is a console-based Python application that simulates the core operations of a simple banking system. It allows users to create accounts, deposit and withdraw money, check balances, and manage banking transactions through an interactive command-line interface.
-
-This project demonstrates a strong grasp of Python programming fundamentals, including Object-Oriented Programming (OOP), inheritance, functions, loops, conditional logic, and exception handling — all structured around a clean and logical program flow.
-
+This project simulates the core functionalities of a banking system, focusing on **state persistence**, **secure authentication**, and **financial risk controls**. Unlike basic scripts, The Iron Bank maintains user data across sessions using a file-based database architecture.
 
 ---
 
-🚀 Features
+## 🚀 Key Features
 
-🧾 Account Management: Create and manage multiple customer accounts.
+### 1. 🔐 Secure Authentication Layer
+- Implementation of a login system requiring email and password verification.
+- Robust **User Registration Flow** with password strength validation (min 8 chars).
+- Prevents unauthorized access to banking functions.
 
-💰 Deposit & Withdrawal: Perform secure deposit and withdrawal operations with input validation.
+### 2. 💾 Persistent State Management (File I/O)
+- **Auto-Healing Initialization:** The system automatically checks for missing database files (`balance.txt`, `transaction_log.txt`) on startup and creates them if needed to prevent crashes.
+- **Real-Time Updates:** Account balance is read from and written to disk instantly after every transaction, ensuring no data loss.
 
-📊 Balance Inquiry: Check account balances in real-time.
+### 3. 🛡️ Risk Management & Error Handling
+- **Overdraft Protection:** Logic guards prevent withdrawals exceeding the current balance.
+- **Input Sanitization:** Uses `try-except` blocks to handle non-numeric inputs gracefully without crashing the application.
+- **Negative Value Guards:** Prevents malicious inputs (e.g., depositing negative money).
 
-🔁 Interactive Menu: User-friendly interface using while loops for continuous operation until exit.
-
-⚙️ Error Handling: Prevent crashes with robust try-except blocks for invalid inputs or transactions.
-
-🧩 Modular Code Design: Uses functions and a main() method for structured and maintainable code.
-
-🏗️ OOP Concepts: Implements classes and inheritance to represent customers, accounts, and transaction logic.
-
-
-
----
-
-🧠 Concepts Used
-
-Python Functions
-
-Main Function (if _name_ == "_main_":)
-
-While Loops & Logical Flow
-
-If-Elif-Else Conditions
-
-Exception Handling (try-except)
-
-Object-Oriented Programming (OOP)
-
-Class Inheritance & Encapsulation
-
-Return Statements
-
-
+### 4. 📜 Compliance & Audit Trail
+- Includes a dedicated `log_transaction()` module.
+- Records every Deposit and Withdrawal with a **Timestamp** (`YYYY-MM-DD HH:MM:SS`) to a permanent log file, simulating real-world banking compliance standards.
 
 ---
 
-💡 Learning Goals
+## 🛠️ Technical Stack
+- **Language:** Python 3.x
+- **Modules:** `os` (File System), `datetime` (Timestamping)
+- **Concepts:** Functions, File Handling, Exception Handling, Control Flow, String Manipulation.
 
-This project was built to strengthen understanding of:
-
-Core OOP principles in Python
-
-Designing modular and maintainable code
-
-Handling user input and runtime errors gracefully
-
-Implementing logical workflows in real-world problem-solving
-
-
-
----
-
-🧩 Future Improvements
-
-Add data persistence using files or a database (e.g., SQLite).
-
-Implement user authentication (PIN/password).
-
-Add transaction history tracking.
-
-Create a GUI version using Tkinter or PyQt.
-
-
-
----
-
-⚡ Tech Stack
-
-Language: Python 3
-
-Paradigm: Object-Oriented Programming (OOP)
-
-Interface: Command-Line (CLI)
