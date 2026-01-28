@@ -26,7 +26,7 @@ This project simulates the core functionalities of a banking system, focusing on
 - Includes a dedicated `log_transaction()` module.
 - Records every Deposit and Withdrawal with a **Timestamp** (`YYYY-MM-DD HH:MM:SS`) to a permanent log file, simulating real-world banking compliance standards.
 
----
+--- 
 
 ## 🛠️ Technical Stack
 - **Language:** Python 3.x
