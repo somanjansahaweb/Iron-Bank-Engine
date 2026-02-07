@@ -1,138 +1,152 @@
 import os
+import sys
 from datetime import datetime
 
-BALANCE_FILE = "balance.txt"
-LOG_FILE = "transaction_log.txt"
-DEFAULT_BALANCE = "0"
+# --- CONFIGURATION ---
+USERS_FILE = "Iron.txt"
+TRANSACTION_LOG_FILE = "Transact.txt"
+DEFAULT_BALANCE = 1200. 
 
 
-def initialize_system():
-    """Create files if they don't exist"""
-    if not os.path.exists(BALANCE_FILE):
-        with open(BALANCE_FILE, "w") as f:
-            f.write(DEFAULT_BALANCE)
-    if not os.path.exists(LOG_FILE):
-        with open(LOG_FILE, "w") as f:
-            f.write("-----Transaction Log Started-----\n")
+class IronBankEngine:
+    """The Persistence Layer: Handles all file reading and writing."""
 
-def get_balance():
-    """Read balance from file"""
-    with open(BALANCE_FILE, "r") as f:
-        return float(f.read().strip())
-
-def save_balance(balance):
-    """Save balance to file"""
-    with open(BALANCE_FILE, "w") as f:
-        f.write(str(balance))
-
-def log_transaction(transaction_type, amount):
-    """Log transaction to file"""
-    with open(LOG_FILE, "a") as f:
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        f.write(f"[{timestamp}] {transaction_type}: ${amount:.2f}\n")
+    @staticmethod
+    def initialize_systems():
+        if not os.path.exists(USERS_FILE):
+            with open(USERS_FILE, 'w') as f:  
+                pass
+        if not os.path.exists(TRANSACTION_LOG_FILE):
+            with open(TRANSACTION_LOG_FILE, 'w') as f:
+                f.write("------------ TRANSACTION LOG STARTED ------------\n") 
+                 
 
 
-def deposit(balance):
-    try:
-        amount = float(input("ENTER AMOUNT TO DEPOSIT: "))
-        if amount <= 0:
-            print("Amount must be positive!")
-            return balance
-        
-        balance += amount
-        save_balance(balance)
-        log_transaction("DEPOSIT", amount)
-        print(f"Successfully deposited ${amount:.2f}")
-        return balance
-    except ValueError:
-        print("Invalid input! Enter a number.")
-        return balance
-
-def withdraw(balance):
-    try:
-        amount = float(input("ENTER AMOUNT TO WITHDRAW: "))
-        if amount <= 0:
-            print("Amount must be positive!")
-            return balance
-        
-        if amount > balance:
-            print(f"Insufficient Funds! Balance: ${balance:.2f}")
-            return balance
-            
-        balance -= amount  
-        save_balance(balance)
-        log_transaction("WITHDRAW", amount)
-        print(f"Successfully withdrew ${amount:.2f}")
-        return balance
-    except ValueError:
-        print("Invalid input! Enter a number.")
-        return balance
-
-
-initialize_system()
-print("\n--------- WELCOME TO IRON BANK -----------")
-
-while True:
-    print("\n1. Login")
-    print("2. Register")
-    print("3. Exit")
-    print("-" * 30)
-    
-    choice = input("Select Option: ")
-
-    if choice == "1":
-        email = input("Enter Email: ").strip()
-        if email == "sahasomanjan@gmail.com":
-            password = input("Enter Password: ")
-            if password == "Somanjan2006@$":
-                print("\nACCESS GRANTED!")
-                current_balance = get_balance()
-                banking_active = True
-                
-                while banking_active:
-                    print(f"\n--- ACCOUNT MENU (Balance: ${current_balance:.2f}) ---")
-                    print("1. Show Balance")
-                    print("2. Deposit")
-                    print("3. Withdraw")
-                    print("4. Logout")
-                    
-                    op = input("Select: ")
-                    
-                    if op == "1":
-                        print(f"\nCurrent Balance: ${current_balance:.2f}")
-                    elif op == "2":
-                        current_balance = deposit(current_balance)
-                    elif op == "3":
-                        current_balance = withdraw(current_balance)
-                    elif op == "4":
-                        print("Logging out...")
-                        banking_active = False 
+    @staticmethod
+    def save_user_state(email, balance, new_password=None):
+        """Finds user by email and updates their balance or password."""
+        updated_lines = []
+        with open(USERS_FILE, "r") as f:
+            for line in f:
+                parts = line.strip().split(",")
+                if len(parts) == 3:
+                    stored_email, stored_pass, stored_balance = parts
+                    if stored_email == email:
+                        # If a new_password is provided, use it; otherwise keep the old one
+                        pass_to_save = new_password if new_password else stored_pass
+                        updated_lines.append(f"{stored_email},{pass_to_save},{balance}\n")
                     else:
-                        print("Invalid Option.")
-            else:
-                print("Invalid Password")
-        else:
-            print("User not found")
+                        updated_lines.append(line) 
+                         
+                                 
+        with open(USERS_FILE, "w") as f:
+            f.writelines(updated_lines) 
+             
 
-    elif choice == "2":
-        # --- REGISTER FLOW ---
-        print("\n--- REGISTRATION ---")
-        new_email = input("Enter Email: ")
-        if "@" not in new_email:
-            print("Invalid Email.")
-            continue
+
+    @staticmethod
+    def log_transaction(email, action, amount):
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        entry = f"[{timestamp}] {email} | {action}: ${amount:,.2f}\n"
+        with open(TRANSACTION_LOG_FILE, "a") as f:
+            f.write(entry)
+
+class BankAccount:
+    """The Business Logic: Handles user actions in memory."""
+    def __init__(self, email, balance):
+        self.email = email
+        self.balance = float(balance)
+
+    def deposit(self):
+        amount = self._get_amount("DEPOSIT")
+        if amount:
+            self.balance += amount
+            IronBankEngine.save_user_state(self.email, self.balance)
+            IronBankEngine.log_transaction(self.email, "DEPOSIT", amount)
+            print(f"\n[SUCCESS] NEW BALANCE: ${self.balance:,.2f}")
+
+    def withdraw(self):
+        
+        print(f"\n YOU HAVE: ${self.balance}")
+        
+        amount = self._get_amount("WITHDRAWAL")
+        
+        if amount:
+            print(f" COMPARING: Is {amount} > {self.balance}?")
             
-        while True:
-            new_pass = input("Set Password (Min 8 chars): ")
-            if len(new_pass) >= 8:
-                print(" Account Created! (Please Login now)")
-                break
-            print(f"Too short ({len(new_pass)}/8).")
+            if amount > self.balance:
+                print(f"[ERROR] YES. {amount} is greater than {self.balance}.")
+                print(f"[ERROR] INSUFFICIENT FUNDS! YOU HAVE: ${self.balance:,.2f}")
+                return
+            self.balance -= amount
+            IronBankEngine.save_user_state(self.email, self.balance)
+            IronBankEngine.log_transaction(self.email, "WITHDRAWAL", amount)
+            print(f"\n[SUCCESS] WITHDRAWAL COMPLETE.")
+            print(f"[SUCCESS] NEW BALANCE: ${self.balance:,.2f}")
 
-    elif choice == "3":
-        print("Goodbye!")
-        break
-    else:
-        print("Invalid Option.")
+    def change_password(self):
+        new_password = input("ENTER NEW PASSWORD (MIN 8): ")
+        if len(new_password) >= 8:
+            # We call the engine to update the password in the file
+            IronBankEngine.save_user_state(self.email, self.balance, new_password=new_password)
+            print("\n[SUCCESS] PASSWORD UPDATED.")
+        else:
+            print("\n[ERROR] TOO SHORT.")
 
+    def _get_amount(self, action):
+        try:
+            val = float(input(f"ENTER {action} AMOUNT: $"))
+            return val if val > 0 else None
+        except ValueError:
+            print("[ERROR] INVALID INPUT.")
+            return None
 
+# --- APP FLOW ---
+def authenticate():
+    email = input("EMAIL: ")
+    pwd = input("PASSWORD: ")
+    if os.path.exists(USERS_FILE):
+        with open(USERS_FILE, "r") as f:
+            for line in f:
+                data = line.strip().split(",")
+                if len(data) == 3:
+                    u, p, b = data
+                    if u == email and p == pwd:
+                        return BankAccount(u, b)
+    return None
+
+def register():
+    email = input("NEW EMAIL: ")
+    password = input("NEW PASSWORD: ")
+    with open(USERS_FILE, "a") as f:
+        f.write(f"{email},{password},{DEFAULT_BALANCE}\n")
+    print("\n[SUCCESS] REGISTRATION COMPLETE.")
+
+def main():
+    IronBankEngine.initialize_systems()
+    while True:
+        print("\n" + "="*30 + "\n  THE IRON BANK\n" + "="*30)
+        print("1. LOGIN\n2. REGISTER\n3. EXIT")
+        choice = input("SELECT > ")
+        if choice == "3": break
+        if choice == "2": register()
+        elif choice == "1":
+            user_account = authenticate()
+            if user_account:
+                banking_menu(user_account)
+            else:
+                print("\n[DENIED] INVALID LOGIN.")
+
+def banking_menu(account):
+    while True:
+        print(f"\n--- WELCOME {account.email} ---")
+        print("1. DEPOSIT\n2. WITHDRAW\n3. BALANCE\n4. CHANGE PASSWORD\n5. LOGOUT")
+        opt = input("ACTION > ")
+        if opt == "1": account.deposit()
+        elif opt == "2": account.withdraw()
+        elif opt == "3": print(f"\nCURRENT BALANCE: ${account.balance:,.2f}")
+        elif opt == "4": account.change_password()
+        elif opt == "5": break
+
+if __name__ == "__main__":
+    main()
